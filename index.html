@@ -15,6 +15,25 @@
 
   <canvas id="gameCanvas"></canvas>
 
+  <button id="settingsBtn" aria-label="Open settings">⚙️</button>
+
+  <div id="settingsModal" hidden>
+    <h2>Settings</h2>
+    <label>
+      <input type="checkbox" id="vibrateToggle" checked>
+      Vibrate on hit
+    </label>
+    <label>
+      <input type="checkbox" id="soundToggle" checked>
+      Sound effects
+    </label>
+    <label>
+      <input type="checkbox" id="highScoreToggle" checked>
+      Show best score
+    </label>
+    <button id="closeSettings">Close</button>
+  </div>
+
   <script src="game.js"></script>
 </body>
 </html>
