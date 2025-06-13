@@ -3,7 +3,7 @@
 A bite-size HTML5 clicker game.
 **Goal:** Tap or click drifting stars before they float out of view. Every star = +1 point.
 
-Play now → https://your-username.github.io/star-chaser/
+Play now → https://resonantspiral.github.io/star-chaser/
 
 ## How to run locally
 ```bash
