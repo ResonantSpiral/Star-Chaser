@@ -2,11 +2,34 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const scoreEl = document.getElementById("score");
+const bestEl = document.getElementById("best");
+
+// Load high score from localStorage
+let best = +localStorage.getItem("best") || 0;
+bestEl.textContent = best;
+
+// Simple click sound using Web Audio API
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playPing() {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = "sine";
+  osc.frequency.value = 880; // A5 tone
+  gain.gain.value = 0.2;
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.1);
+}
 
 // Resize canvas to fill the window
 function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  const ratio = window.devicePixelRatio || 1;
+  canvas.style.width = window.innerWidth + "px";
+  canvas.style.height = window.innerHeight + "px";
+  canvas.width = window.innerWidth * ratio;
+  canvas.height = window.innerHeight * ratio;
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 }
 window.addEventListener("resize", resize);
 resize();
@@ -24,9 +47,13 @@ function createStar() {
 
 let stars = Array.from({ length: 20 }, createStar);
 let score = 0;
+let lastClick = 0;
 
 // Click detection
 canvas.addEventListener("pointerdown", (e) => {
+  const now = performance.now();
+  if (now - lastClick < 50) return;
+  lastClick = now;
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
@@ -36,10 +63,16 @@ canvas.addEventListener("pointerdown", (e) => {
     if (hit) {
       score++;
       scoreEl.textContent = score;
+      if (score > best) {
+        best = score;
+        localStorage.setItem("best", best);
+        bestEl.textContent = best;
+      }
+      playPing();
     }
     return !hit;
   });
-});
+}, { passive: true });
 
 // Main loop
 function loop() {
