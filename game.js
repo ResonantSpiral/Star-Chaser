@@ -51,6 +51,7 @@ function playBeep(){
 }
 
 // Resize canvas to fill the window
+let starTarget = 20;
 function resize() {
   const ratio = window.devicePixelRatio || 1;
   canvas.style.width = window.innerWidth + "px";
@@ -58,6 +59,12 @@ function resize() {
   canvas.width = window.innerWidth * ratio;
   canvas.height = window.innerHeight * ratio;
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+  // Mobile screens get more stars for faster play
+  starTarget = window.innerWidth <= 600 ? 40 : 20;
+  if (typeof stars !== 'undefined' && stars.length > starTarget) {
+    stars = stars.slice(0, starTarget);
+  }
 }
 window.addEventListener("resize", resize);
 resize();
@@ -73,7 +80,7 @@ function createStar() {
   };
 }
 
-let stars = Array.from({ length: 20 }, createStar);
+let stars = Array.from({ length: starTarget }, createStar);
 let score = 0;
 let lastClick = 0;
 
@@ -119,7 +126,7 @@ function loop() {
 
   // Remove off-screen, add new
   stars = stars.filter((s) => s.y + s.size > 0);
-  while (stars.length < 20) stars.push(createStar());
+  while (stars.length < starTarget) stars.push(createStar());
 
   requestAnimationFrame(loop);
 }
