@@ -3,6 +3,8 @@
 A bite-size HTML5 clicker game.
 **Goal:** Tap or click drifting stars before they float out of view. Every star = +1 point.
 
+The game now scales crisply on high-DPI displays, tracks your best score locally, and plays a short "ping" after each successful click.
+
 Play now → https://resonantspiral.github.io/Star-Chaser/
 
 ## How to run locally
