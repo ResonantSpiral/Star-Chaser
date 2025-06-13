@@ -8,16 +8,44 @@ const bestEl = document.getElementById("best");
 let best = +localStorage.getItem("best") || 0;
 bestEl.textContent = best;
 
-// Simple click sound using Web Audio API
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playPing() {
+// ---- SETTINGS ----
+const settingsBtn   = document.getElementById('settingsBtn');
+const settingsModal = document.getElementById('settingsModal');
+const vibrateToggle = document.getElementById('vibrateToggle');
+const soundToggle   = document.getElementById('soundToggle');
+const highToggle    = document.getElementById('highScoreToggle');
+const closeSettings = document.getElementById('closeSettings');
+
+// Persist settings in localStorage
+const SETTINGS_KEY = 'starSettings';
+const defaults = { vibrate:true, sound:true, showHigh:true };
+let opts = { ...defaults, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY))||{}) };
+
+[vibrateToggle, soundToggle, highToggle].forEach((el)=>{
+  el.checked = opts[el.id.replace('Toggle','')];
+  el.addEventListener('change', ()=> {
+    opts[el.id.replace('Toggle','')] = el.checked;
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(opts));
+    if(el===highToggle) document.getElementById('hud').style.display = el.checked? 'block':'none';
+  });
+});
+document.getElementById('hud').style.display = opts.showHigh? 'block':'none';
+
+settingsBtn.onclick   = ()=> settingsModal.hidden=false;
+closeSettings.onclick = ()=> settingsModal.hidden=true;
+window.addEventListener('keydown', e=>{ if(e.key==='Escape') settingsModal.hidden=true; });
+
+// ---- OPTIONAL SOUND ----
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+const audioCtx = AudioCtx ? new AudioCtx() : null;
+function playBeep(){
+  if(!audioCtx) return;
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-  osc.type = "sine";
-  osc.frequency.value = 880; // A5 tone
+  osc.type = 'sine';
+  osc.frequency.value = 880;
   gain.gain.value = 0.2;
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
+  osc.connect(gain).connect(audioCtx.destination);
   osc.start();
   osc.stop(audioCtx.currentTime + 0.1);
 }
@@ -68,7 +96,9 @@ canvas.addEventListener("pointerdown", (e) => {
         localStorage.setItem("best", best);
         bestEl.textContent = best;
       }
-      playPing();
+      // feedback
+      if (opts.sound) playBeep();
+      if (opts.vibrate && navigator.vibrate) navigator.vibrate(30);
     }
     return !hit;
   });
