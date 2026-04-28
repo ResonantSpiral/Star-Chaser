@@ -10,6 +10,7 @@ const bonusWrap = document.getElementById("bonusWrap");
 const startPanel = document.getElementById("startPanel");
 const startBtn = document.getElementById("startBtn");
 const runSummary = document.getElementById("runSummary");
+const modeButtons = Array.from(document.querySelectorAll("[data-mode]"));
 const settingsBtn = document.getElementById("settingsBtn");
 const settingsModal = document.getElementById("settingsModal");
 const vibrateToggle = document.getElementById("vibrateToggle");
@@ -18,10 +19,19 @@ const highToggle = document.getElementById("highScoreToggle");
 const closeSettings = document.getElementById("closeSettings");
 
 const RUN_SECONDS = 45;
+const EXTENDED_TIME_CAP = 60;
+const HOURGLASS_TIME_BONUS = 5;
+const HOURGLASS_DELAY_MIN = 5200;
+const HOURGLASS_DELAY_RANGE = 5600;
 const SETTINGS_KEY = "starSettings";
+const MODE_KEY = "starMode";
 const BEST_KEY = "best";
 const STAR_SIZE_RANGE = 7;
 const MAX_STAR_VALUE = 7;
+const modes = {
+  classic: "Classic: 45-second run",
+  extended: "Extended: catch hourglasses for +5s",
+};
 const defaults = { vibrate: true, sound: true, showHigh: true };
 const settingKeys = new Map([
   [vibrateToggle, "vibrate"],
@@ -34,7 +44,9 @@ const reduceMotion = window.matchMedia(
 ).matches;
 
 let settings = { ...defaults, ...readSettings() };
-let best = Number(readStorage(BEST_KEY)) || 0;
+const savedMode = readStorage(MODE_KEY);
+let currentMode = modes[savedMode] ? savedMode : "classic";
+let best = loadBest();
 let score = 0;
 let streak = 0;
 let streakBonus = 0;
@@ -47,6 +59,7 @@ let bursts = [];
 let width = 0;
 let height = 0;
 let starTarget = 24;
+let nextHourglassAt = Infinity;
 
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 const audioCtx = AudioCtx ? new AudioCtx() : null;
@@ -91,12 +104,36 @@ function applySettings() {
   bestWrap.hidden = !settings.showHigh;
 }
 
+function applyMode() {
+  modeButtons.forEach((button) => {
+    button.setAttribute(
+      "aria-pressed",
+      String(button.dataset.mode === currentMode)
+    );
+  });
+
+  if (!playing) {
+    runSummary.textContent = modes[currentMode];
+  }
+
+  best = loadBest();
+  updateHud();
+}
+
 function updateHud() {
   scoreEl.textContent = score;
   bestEl.textContent = best;
   timeEl.textContent = Math.ceil(timeLeft);
   streakEl.textContent = streak;
   bonusEl.textContent = `+${streakBonus}`;
+}
+
+function bestKey() {
+  return currentMode === "classic" ? BEST_KEY : `${BEST_KEY}:${currentMode}`;
+}
+
+function loadBest() {
+  return Number(readStorage(bestKey())) || 0;
 }
 
 function resize() {
@@ -137,6 +174,7 @@ function createStar(fromBottom = true) {
   const speed = speedBase + Math.random() * speedRange;
 
   return {
+    kind: "star",
     x: Math.random() * width,
     y: fromBottom
       ? height + size + Math.random() * 80
@@ -150,13 +188,38 @@ function createStar(fromBottom = true) {
   };
 }
 
+function createHourglass() {
+  const size = Math.random() * 3 + (width <= 600 ? 9 : 8);
+  const speedBase = reduceMotion ? 1.15 : 2.25;
+  const speed = speedBase + Math.random() * 0.75;
+
+  return {
+    kind: "hourglass",
+    x: Math.random() * width,
+    y: height + size + Math.random() * 50,
+    size,
+    speed,
+    drift: (Math.random() - 0.5) * 0.52,
+    phase: Math.random() * Math.PI * 2,
+    color: "#fff6a8",
+    timeValue: HOURGLASS_TIME_BONUS,
+  };
+}
+
 function fillStars(fromBottom = true) {
-  while (stars.length < starTarget) {
+  let starCount = stars.filter((star) => star.kind === "star").length;
+  while (starCount < starTarget) {
     stars.push(createStar(fromBottom));
+    starCount += 1;
   }
 }
 
 function drawStar(star) {
+  if (star.kind === "hourglass") {
+    drawHourglass(star);
+    return;
+  }
+
   const pulse = reduceMotion ? 1 : 1 + Math.sin(star.phase) * 0.12;
   const outer = star.size * pulse;
   const inner = outer * 0.46;
@@ -181,22 +244,79 @@ function drawStar(star) {
   ctx.restore();
 }
 
-function addBurst(x, y, points, starValue, bonus) {
+function drawHourglass(item) {
+  const pulse = reduceMotion ? 1 : 1 + Math.sin(item.phase) * 0.08;
+  const size = item.size * pulse;
+
+  ctx.save();
+  ctx.translate(item.x, item.y);
+  ctx.rotate(Math.sin(item.phase) * 0.12);
+  ctx.shadowColor = item.color;
+  ctx.shadowBlur = 18;
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = item.color;
+  ctx.fillStyle = "rgba(255, 246, 168, 0.64)";
+
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.62, -size);
+  ctx.lineTo(size * 0.62, -size);
+  ctx.lineTo(0, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.62, size);
+  ctx.lineTo(size * 0.62, size);
+  ctx.lineTo(0, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.7, -size);
+  ctx.lineTo(size * 0.7, -size);
+  ctx.moveTo(-size * 0.7, size);
+  ctx.lineTo(size * 0.7, size);
+  ctx.moveTo(-size * 0.5, -size * 0.82);
+  ctx.lineTo(size * 0.5, size * 0.82);
+  ctx.moveTo(size * 0.5, -size * 0.82);
+  ctx.lineTo(-size * 0.5, size * 0.82);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function addBurst(x, y, label, detail, sparkColor) {
   const sparkCount = reduceMotion ? 0 : 10;
   bursts.push({
     x,
     y,
-    points,
-    starValue,
-    bonus,
+    label,
+    detail,
+    sparkColor,
     age: 0,
     life: 0.5,
     sparks: Array.from({ length: sparkCount }, () => ({
       angle: Math.random() * Math.PI * 2,
       speed: 35 + Math.random() * 75,
-      color: colors[Math.floor(Math.random() * colors.length)],
+      color: sparkColor || colors[Math.floor(Math.random() * colors.length)],
     })),
   });
+}
+
+function addScoreBurst(x, y, points, starValue, bonus) {
+  addBurst(
+    x,
+    y,
+    `+${points}`,
+    bonus > 0 ? `star ${starValue} + streak ${bonus}` : `star ${starValue}`
+  );
+}
+
+function addTimeBurst(x, y, seconds) {
+  addBurst(x, y, `+${seconds}s`, "hourglass", "#fff6a8");
+}
+
+function addStreakLostBurst(x, y) {
+  addBurst(x, y, "streak lost", "missed hourglass", "#ff8fc7");
 }
 
 function drawBursts(delta) {
@@ -209,17 +329,11 @@ function drawBursts(delta) {
     ctx.globalAlpha = alpha;
     ctx.font = "800 20px Segoe UI, Arial, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(`+${burst.points}`, burst.x, burst.y - 28 * t);
+    ctx.fillStyle = burst.sparkColor || "#ffffff";
+    ctx.fillText(burst.label, burst.x, burst.y - 28 * t);
     ctx.font = "700 11px Segoe UI, Arial, sans-serif";
     ctx.fillStyle = "#fff6a8";
-    ctx.fillText(
-      burst.bonus > 0
-        ? `star ${burst.starValue} + streak ${burst.bonus}`
-        : `star ${burst.starValue}`,
-      burst.x,
-      burst.y + 14 - 28 * t
-    );
+    ctx.fillText(burst.detail, burst.x, burst.y + 14 - 28 * t);
 
     burst.sparks.forEach((spark) => {
       const distance = spark.speed * burst.age;
@@ -269,6 +383,7 @@ function startRun() {
   stars = [];
   bursts = [];
   lastFrame = performance.now();
+  scheduleHourglass(lastFrame);
   fillStars(false);
   startPanel.hidden = true;
   updateHud();
@@ -276,12 +391,13 @@ function startRun() {
 
 function finishRun() {
   playing = false;
+  nextHourglassAt = Infinity;
   if (score > best) {
     best = score;
-    writeStorage(BEST_KEY, String(best));
+    writeStorage(bestKey(), String(best));
   }
   updateHud();
-  runSummary.textContent = `Score ${score} | Best ${best}`;
+  runSummary.textContent = `${currentModeLabel()}: Score ${score} | Best ${best}`;
   startBtn.textContent = "Play Again";
   startPanel.hidden = false;
   startBtn.focus({ preventScroll: true });
@@ -296,6 +412,16 @@ function hitStar(pointerX, pointerY) {
     if (distance > radius || hit) return true;
 
     hit = true;
+    if (star.kind === "hourglass") {
+      timeLeft = Math.min(EXTENDED_TIME_CAP, timeLeft + star.timeValue);
+      lastHitAt = performance.now();
+      addTimeBurst(star.x, star.y, star.timeValue);
+      playBeep(8);
+      if (settings.vibrate && navigator.vibrate) navigator.vibrate([18, 25, 18]);
+      updateHud();
+      return false;
+    }
+
     streak += 1;
     const nextBonus = Math.floor(streak / 5);
     const bonusIncreased = nextBonus > streakBonus;
@@ -303,7 +429,7 @@ function hitStar(pointerX, pointerY) {
     const points = star.value + streakBonus;
     score += points;
     lastHitAt = performance.now();
-    addBurst(star.x, star.y, points, star.value, streakBonus);
+    addScoreBurst(star.x, star.y, points, star.value, streakBonus);
     playBeep(points);
     if (settings.vibrate && navigator.vibrate) navigator.vibrate(25);
     if (bonusIncreased && !reduceMotion) {
@@ -333,15 +459,57 @@ function handlePointer(event) {
   hitStar(pointerX, pointerY);
 }
 
-function updateStars(delta) {
+function currentModeLabel() {
+  return currentMode.charAt(0).toUpperCase() + currentMode.slice(1);
+}
+
+function scheduleHourglass(now) {
+  nextHourglassAt =
+    currentMode === "extended"
+      ? now + HOURGLASS_DELAY_MIN + Math.random() * HOURGLASS_DELAY_RANGE
+      : Infinity;
+}
+
+function maybeSpawnHourglass(now) {
+  if (currentMode !== "extended" || !playing || now < nextHourglassAt) return;
+  if (!stars.some((star) => star.kind === "hourglass")) {
+    stars.push(createHourglass());
+  }
+  scheduleHourglass(now);
+}
+
+function resetStreakForMissedHourglass(x, y) {
+  if (streak === 0 && streakBonus === 0) return;
+
+  streak = 0;
+  streakBonus = 0;
+  addStreakLostBurst(x, y);
+  updateHud();
+}
+
+function updateStars(delta, now) {
+  maybeSpawnHourglass(now);
+
   stars.forEach((star) => {
-    const speedBoost = playing ? 1 + Math.min(score / 120, 0.7) : 0.42;
+    let speedBoost = 0.42;
+    if (star.kind === "hourglass") {
+      speedBoost = 1;
+    } else if (playing) {
+      speedBoost = 1 + Math.min(score / 120, 0.7);
+    }
+
     star.y -= star.speed * speedBoost * delta * 60;
     star.x += Math.sin(star.phase) * star.drift * delta * 60;
     star.phase += delta * (reduceMotion ? 1.2 : 2.4);
   });
 
-  stars = stars.filter((star) => star.y + star.size > 0);
+  stars = stars.filter((star) => {
+    const visible = star.y + star.size > 0;
+    if (!visible && playing && star.kind === "hourglass") {
+      resetStreakForMissedHourglass(star.x, Math.max(70, star.size * 2));
+    }
+    return visible;
+  });
   fillStars(true);
 }
 
@@ -350,7 +518,7 @@ function loop(now) {
   lastFrame = now;
 
   ctx.clearRect(0, 0, width, height);
-  updateStars(delta);
+  updateStars(delta, now);
 
   stars.forEach(drawStar);
   drawBursts(delta);
@@ -369,6 +537,14 @@ settingKeys.forEach((key, toggle) => {
     settings[key] = toggle.checked;
     saveSettings();
     applySettings();
+  });
+});
+
+modeButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    currentMode = modes[button.dataset.mode] ? button.dataset.mode : "classic";
+    writeStorage(MODE_KEY, currentMode);
+    applyMode();
   });
 });
 
@@ -401,6 +577,7 @@ canvas.addEventListener("pointerdown", handlePointer, { passive: true });
 window.addEventListener("resize", resize);
 
 applySettings();
+applyMode();
 resize();
 fillStars(false);
 updateHud();

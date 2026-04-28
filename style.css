@@ -140,6 +140,24 @@ button:focus-visible {
   color: #b8c8ef;
 }
 
+.mode-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.mode-controls button {
+  min-height: 38px;
+  background: transparent;
+  color: #e0e8ff;
+}
+
+.mode-controls button[aria-pressed="true"] {
+  background: #fff06d;
+  color: #17120a;
+}
+
 .panel label {
   display: flex;
   align-items: center;

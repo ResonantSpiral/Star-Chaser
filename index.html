@@ -24,7 +24,11 @@
 
   <section id="startPanel" class="panel" aria-live="polite">
     <h2>Star-Chaser</h2>
-    <p id="runSummary">45-second run</p>
+    <p id="runSummary">Classic: 45-second run</p>
+    <div class="mode-controls" role="group" aria-label="Game mode">
+      <button type="button" data-mode="classic" aria-pressed="true">Classic</button>
+      <button type="button" data-mode="extended" aria-pressed="false">Extended</button>
+    </div>
     <button id="startBtn" type="button">Start Run</button>
   </section>
 
