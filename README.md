@@ -1,21 +1,44 @@
-# ⭐ Star-Chaser
+# Star-Chaser
 
-A bite-size HTML5 clicker game.
-**Goal:** Tap or click drifting stars before they float out of view. Every star = +1 point.
+A bite-size HTML5 arcade clicker game.
 
-The game now scales crisply on high-DPI displays, tracks your best score locally, and plays a short beep after each successful click. Mobile screens spawn extra stars so the pace feels just as lively.
+Play now: https://resonantspiral.github.io/Star-Chaser/
 
-Play now → https://resonantspiral.github.io/Star-Chaser/
+## Gameplay
+
+Tap or click drifting stars before they float away. Each run lasts 45 seconds.
+
+Scoring rewards precision:
+
+- Smaller stars are worth more.
+- Faster stars are worth more.
+- Streaks add bonus points every five hits.
+- Missing a star resets the streak.
+
+Your best score is saved locally in the browser. The settings panel lets you toggle sound, vibration, and best-score display.
 
 ## How to run locally
+
+No build tools are required.
+
 ```bash
-git clone https://github.com/your-username/star-chaser.git
-cd star-chaser
-# Then simply open index.html in any browser
+git clone https://github.com/ResonantSpiral/Star-Chaser.git
+cd Star-Chaser
+python3 -m http.server 8766
 ```
+
+Then open `http://127.0.0.1:8766/`.
+
+You can also open `index.html` directly in a browser for quick local checks.
+
+## Project shape
+
+- `index.html`: page structure and HUD controls.
+- `style.css`: responsive layout, panels, and visual treatment.
+- `game.js`: canvas loop, scoring, settings, persistence, and input.
+
+The core project stays plain HTML, CSS, and JavaScript so it remains easy to inspect, remix, and contribute to.
 
 ## Contributing
 
-Pull requests are welcome! Check the Issues tab for beginner-friendly ideas.
-
-See [AGENTS & GUIDELINES](AGENTS.md) to meet the maintainers and learn how to contribute.
+Pull requests are welcome. Keep changes focused, test on desktop and mobile-sized viewports when gameplay or layout changes, and check [AGENTS & GUIDELINES](AGENTS.md) before opening a PR.
