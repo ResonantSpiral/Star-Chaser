@@ -6,7 +6,7 @@ Play now: https://resonantspiral.github.io/Star-Chaser/
 
 ## Gameplay
 
-Tap or click drifting stars before they float away. Each run lasts 45 seconds.
+Tap or click drifting stars before they float away. Each run starts at 45 seconds.
 
 Scoring rewards precision:
 
@@ -15,7 +15,12 @@ Scoring rewards precision:
 - Streaks add a visible bonus point every five hits.
 - Missing a star resets the streak.
 
-Your best score is saved locally in the browser. The settings panel lets you toggle sound, vibration, and best-score display.
+Modes change the timer pressure:
+
+- **Classic:** strict 45-second run.
+- **Extended:** rare hourglasses add 5 seconds when caught, but missing one breaks the streak.
+
+Your best score is saved locally per mode in the browser. The settings panel lets you toggle sound, vibration, and best-score display.
 
 ## How to run locally
 
