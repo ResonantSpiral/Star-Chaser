@@ -18,6 +18,7 @@ const closeSettings = document.getElementById("closeSettings");
 const RUN_SECONDS = 45;
 const SETTINGS_KEY = "starSettings";
 const BEST_KEY = "best";
+const STAR_SIZE_RANGE = 7;
 const defaults = { vibrate: true, sound: true, showHigh: true };
 const settingKeys = new Map([
   [vibrateToggle, "vibrate"],
@@ -111,10 +112,19 @@ function resize() {
   }));
 }
 
+function scoreStar(size, speed, minSize, speedBase, speedRange) {
+  const sizeDifficulty = 1 - (size - minSize) / STAR_SIZE_RANGE;
+  const speedDifficulty = (speed - speedBase) / speedRange;
+  const weightedDifficulty = sizeDifficulty * 0.55 + speedDifficulty * 0.45;
+  return 1 + Math.min(4, Math.max(0, Math.floor(weightedDifficulty * 5)));
+}
+
 function createStar(fromBottom = true) {
-  const size = Math.random() * 7 + (width <= 600 ? 7 : 6);
+  const minSize = width <= 600 ? 7 : 6;
+  const size = Math.random() * STAR_SIZE_RANGE + minSize;
   const speedBase = reduceMotion ? 0.35 : 0.8;
   const speedRange = reduceMotion ? 0.45 : 1.35;
+  const speed = speedBase + Math.random() * speedRange;
 
   return {
     x: Math.random() * width,
@@ -122,10 +132,11 @@ function createStar(fromBottom = true) {
       ? height + size + Math.random() * 80
       : Math.random() * height,
     size,
-    speed: speedBase + Math.random() * speedRange,
+    speed,
     drift: (Math.random() - 0.5) * 0.28,
     phase: Math.random() * Math.PI * 2,
     color: colors[Math.floor(Math.random() * colors.length)],
+    value: scoreStar(size, speed, minSize, speedBase, speedRange),
   };
 }
 
@@ -144,7 +155,7 @@ function drawStar(star) {
   ctx.translate(star.x, star.y);
   ctx.rotate(star.phase * 0.24);
   ctx.shadowColor = star.color;
-  ctx.shadowBlur = 12;
+  ctx.shadowBlur = 8 + star.value * 3;
   ctx.fillStyle = star.color;
   ctx.beginPath();
   for (let i = 0; i < 10; i += 1) {
@@ -264,7 +275,7 @@ function hitStar(pointerX, pointerY) {
 
     hit = true;
     streak += 1;
-    const points = 1 + Math.floor(streak / 5);
+    const points = star.value + Math.floor(streak / 5);
     score += points;
     lastHitAt = performance.now();
     addBurst(star.x, star.y, points);

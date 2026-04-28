@@ -1,60 +1,66 @@
-# ️ AGENTS & GUIDELINES
+# AGENTS & GUIDELINES
 
-Welcome, star-chasers!  
-This document explains **who the “agents” are**, how to talk to them, and what we ask of every human or AI that contributes.
+Welcome, star-chasers.
 
----
+This file describes how people and AI assistants should work in this repository.
 
-## 1 The Resident Agents
+## Resident Agents
 
 | Name | Role | Typical Context |
 |------|------|-----------------|
-| **Neuro** (that’s me) | Friendly AI co-maintainer. Drafts code, reviews PRs, answers questions, keeps the cosmic vibes flowing. | Issue threads, PR reviews, chat channels |
-| **Quantum Hobo / Hobo** | Human project founder & maintainer. Big-picture vision, final approvals, merges. | All areas |
-| **Community Contributors** | Anyone submitting PRs, issues, or feedback. | GitHub UI, Discussions |
+| **Neuro / Codex** | Friendly AI co-maintainer. Drafts code, reviews PRs, and helps tune gameplay. | Issues, PRs, chat, local maintenance |
+| **Quantum Hobo / Hobo** | Human project founder and maintainer. Sets direction, reviews, and approves merges. | All areas |
+| **Community Contributors** | Anyone submitting ideas, issues, or pull requests. | GitHub issues and PRs |
 
-### 1.1 How to talk to Neuro
+## How to Ask for Help
 
-@neuro  please optimise draw loop for 120 Hz
-@neuro  can you suggest a good first issue?
+Good prompts are short, concrete, and include constraints.
 
+Examples:
 
-* Short, clear questions work best.  
-* State constraints up-front (e.g., “vanilla JS only” or “max 100 LOC”).  
-* Neuro replies in public threads so everyone can learn.
+```text
+@neuro please tune star scoring without adding build tools
+@neuro can you review the canvas resize logic on mobile?
+@neuro suggest a beginner-friendly issue for the settings panel
+```
 
----
+## Contribution Etiquette
 
-## 2 Contribution Etiquette
+1. Keep one feature or bug fix per PR.
+2. Explain why the change matters.
+3. Keep the core repo plain HTML, CSS, and JavaScript.
+4. Include a short validation note for gameplay changes.
+5. AI-generated code is welcome, but a human maintainer should review it before merge.
 
-1. **One feature / bug per PR.** Small, focused changes merge faster.  
-2. **Link to an open issue** or open a new one explaining *why* the change matters.  
-3. **Respect the Code of Conduct** (see `CODE_OF_CONDUCT.md`). In short: be kind, inclusive, and on topic.  
-4. **AI-generated code is welcome** but *must* be reviewed by a human and include a brief rationale. Example footer:
+Example footer:
 
-Generated with GPT-4, reviewed by @your-username.
+```text
+Generated with Codex, reviewed by @your-username.
+```
 
----
+## Gameplay Tuning Notes
 
-## 3 Project Philosophy
+- Reward precision. Smaller and faster stars should generally be worth more.
+- Preserve readability. Players should be able to understand the HUD at a glance.
+- Keep mobile playable. Touch targets and modal controls should remain comfortable on narrow screens.
+- Respect reduced motion. Visual flair should not rely on high-motion effects.
+- Prefer joy over complexity. Additions should make the game feel better without turning it into a framework project.
 
-* **Keep it approachable.** No build tools required; plain HTML/CSS/JS.  
-* **Spark joy.** Fun visual or audio flourishes > micro-optimisations (until perf becomes a problem).  
-* **Learn in public.** Document decisions; leave thoughtful comments.  
-* **Accessibility matters.** Always consider colour-blind palettes, keyboard navigation, and reduced-motion preferences.
+## Technical Notes
 
----
+- No build step is expected.
+- Keep persistent state small and browser-local.
+- Guard optional browser APIs such as `localStorage`, `AudioContext`, and `navigator.vibrate`.
+- Avoid analytics, ads, trackers, or external runtime dependencies.
+- Test layout at desktop and mobile viewport sizes when changing UI.
 
-## 4 FAQ
+## FAQ
 
 | Question | Answer |
 |----------|--------|
-| **Can I rewrite the game in React or Svelte?** | Prefer forks for framework rewrites. Core repo stays vanilla so newcomers aren’t forced into a build pipeline. |
-| **Can I add ads / tracking?** | No. This project is for learning and fun only. |
-| **Does Neuro read every PR?** | Neuro can scan and comment automatically, but final merges are always by a human maintainer. |
+| **Can I rewrite the game in React or Svelte?** | Prefer a fork for framework rewrites. This repo stays no-build and beginner-friendly. |
+| **Can I add new sounds or visuals?** | Yes, if they are lightweight, accessible, and do not require external services. |
+| **Can I add ads, tracking, or telemetry?** | No. This project is for learning and fun only. |
+| **Who merges PRs?** | A human maintainer makes the final merge decision. |
 
----
-
-Happy hacking! 🐑️🌌🦋
-
-Tip: add a link to this file from your README so visitors see it immediately.
+Happy hacking.
