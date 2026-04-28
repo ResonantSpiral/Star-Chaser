@@ -10,9 +10,9 @@ Tap or click drifting stars before they float away. Each run lasts 45 seconds.
 
 Scoring rewards precision:
 
-- Smaller stars are worth more.
-- Faster stars are worth more.
-- Streaks add bonus points every five hits.
+- Large, slow stars are worth 1 point.
+- Smaller and faster stars scale up to 7 points.
+- Streaks add a visible bonus point every five hits.
 - Missing a star resets the streak.
 
 Your best score is saved locally in the browser. The settings panel lets you toggle sound, vibration, and best-score display.

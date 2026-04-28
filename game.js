@@ -5,6 +5,8 @@ const bestEl = document.getElementById("best");
 const bestWrap = document.getElementById("bestWrap");
 const timeEl = document.getElementById("time");
 const streakEl = document.getElementById("streak");
+const bonusEl = document.getElementById("bonus");
+const bonusWrap = document.getElementById("bonusWrap");
 const startPanel = document.getElementById("startPanel");
 const startBtn = document.getElementById("startBtn");
 const runSummary = document.getElementById("runSummary");
@@ -19,6 +21,7 @@ const RUN_SECONDS = 45;
 const SETTINGS_KEY = "starSettings";
 const BEST_KEY = "best";
 const STAR_SIZE_RANGE = 7;
+const MAX_STAR_VALUE = 7;
 const defaults = { vibrate: true, sound: true, showHigh: true };
 const settingKeys = new Map([
   [vibrateToggle, "vibrate"],
@@ -34,6 +37,7 @@ let settings = { ...defaults, ...readSettings() };
 let best = Number(readStorage(BEST_KEY)) || 0;
 let score = 0;
 let streak = 0;
+let streakBonus = 0;
 let timeLeft = RUN_SECONDS;
 let playing = false;
 let lastFrame = performance.now();
@@ -92,6 +96,7 @@ function updateHud() {
   bestEl.textContent = best;
   timeEl.textContent = Math.ceil(timeLeft);
   streakEl.textContent = streak;
+  bonusEl.textContent = `+${streakBonus}`;
 }
 
 function resize() {
@@ -115,8 +120,13 @@ function resize() {
 function scoreStar(size, speed, minSize, speedBase, speedRange) {
   const sizeDifficulty = 1 - (size - minSize) / STAR_SIZE_RANGE;
   const speedDifficulty = (speed - speedBase) / speedRange;
-  const weightedDifficulty = sizeDifficulty * 0.55 + speedDifficulty * 0.45;
-  return 1 + Math.min(4, Math.max(0, Math.floor(weightedDifficulty * 5)));
+  const difficulty = Math.min(
+    1,
+    Math.max(0, sizeDifficulty * 0.6 + speedDifficulty * 0.4)
+  );
+  return (
+    1 + Math.min(MAX_STAR_VALUE - 1, Math.floor(difficulty * MAX_STAR_VALUE))
+  );
 }
 
 function createStar(fromBottom = true) {
@@ -171,12 +181,14 @@ function drawStar(star) {
   ctx.restore();
 }
 
-function addBurst(x, y, points) {
+function addBurst(x, y, points, starValue, bonus) {
   const sparkCount = reduceMotion ? 0 : 10;
   bursts.push({
     x,
     y,
     points,
+    starValue,
+    bonus,
     age: 0,
     life: 0.5,
     sparks: Array.from({ length: sparkCount }, () => ({
@@ -195,10 +207,19 @@ function drawBursts(delta) {
 
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.font = "800 18px Segoe UI, Arial, sans-serif";
+    ctx.font = "800 20px Segoe UI, Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffffff";
     ctx.fillText(`+${burst.points}`, burst.x, burst.y - 28 * t);
+    ctx.font = "700 11px Segoe UI, Arial, sans-serif";
+    ctx.fillStyle = "#fff6a8";
+    ctx.fillText(
+      burst.bonus > 0
+        ? `star ${burst.starValue} + streak ${burst.bonus}`
+        : `star ${burst.starValue}`,
+      burst.x,
+      burst.y + 14 - 28 * t
+    );
 
     burst.sparks.forEach((spark) => {
       const distance = spark.speed * burst.age;
@@ -242,6 +263,7 @@ function playBeep(points) {
 function startRun() {
   score = 0;
   streak = 0;
+  streakBonus = 0;
   timeLeft = RUN_SECONDS;
   playing = true;
   stars = [];
@@ -275,18 +297,26 @@ function hitStar(pointerX, pointerY) {
 
     hit = true;
     streak += 1;
-    const points = star.value + Math.floor(streak / 5);
+    const nextBonus = Math.floor(streak / 5);
+    const bonusIncreased = nextBonus > streakBonus;
+    streakBonus = nextBonus;
+    const points = star.value + streakBonus;
     score += points;
     lastHitAt = performance.now();
-    addBurst(star.x, star.y, points);
+    addBurst(star.x, star.y, points, star.value, streakBonus);
     playBeep(points);
     if (settings.vibrate && navigator.vibrate) navigator.vibrate(25);
+    if (bonusIncreased && !reduceMotion) {
+      bonusWrap.classList.remove("pulse");
+      window.requestAnimationFrame(() => bonusWrap.classList.add("pulse"));
+    }
     updateHud();
     return false;
   });
 
   if (!hit) {
     streak = 0;
+    streakBonus = 0;
     updateHud();
   }
 }

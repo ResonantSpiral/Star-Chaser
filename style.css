@@ -44,7 +44,7 @@ body {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -63,6 +63,17 @@ body {
   margin-top: 1px;
   color: #fff6a8;
   font-size: 1rem;
+}
+
+.stats span.pulse {
+  animation: stat-pop 420ms ease;
+}
+
+@keyframes stat-pop {
+  50% {
+    background: rgba(255, 240, 109, 0.24);
+    transform: translateY(-1px);
+  }
 }
 
 #gameCanvas {
@@ -171,6 +182,10 @@ button {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  #bonusWrap {
+    grid-column: span 2;
+  }
+
   #settingsBtn {
     top: auto;
     right: 10px;
@@ -182,6 +197,7 @@ button {
   *,
   *::before,
   *::after {
+    animation-duration: 0.01ms !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
