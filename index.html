@@ -7,18 +7,28 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="hud">
-    <h1>⭐ Star-Chaser ⭐</h1>
-    <p>Score: <span id="score">0</span></p>
-    <p>Best: <span id="best">0</span></p>
-  </div>
-
   <canvas id="gameCanvas"></canvas>
 
-  <button id="settingsBtn" aria-label="Open settings">⚙️</button>
+  <div id="hud">
+    <h1>⭐ Star-Chaser ⭐</h1>
+    <div class="stats" aria-live="polite">
+      <span>Score <strong id="score">0</strong></span>
+      <span id="bestWrap">Best <strong id="best">0</strong></span>
+      <span>Time <strong id="time">45</strong></span>
+      <span>Streak <strong id="streak">0</strong></span>
+    </div>
+  </div>
 
-  <div id="settingsModal" hidden>
-    <h2>Settings</h2>
+  <button id="settingsBtn" type="button" aria-label="Open settings" title="Settings">⚙️</button>
+
+  <section id="startPanel" class="panel" aria-live="polite">
+    <h2>Star-Chaser</h2>
+    <p id="runSummary">45-second run</p>
+    <button id="startBtn" type="button">Start Run</button>
+  </section>
+
+  <div id="settingsModal" class="panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" hidden>
+    <h2 id="settingsTitle">Settings</h2>
     <label>
       <input type="checkbox" id="vibrateToggle" checked>
       Vibrate on hit
@@ -31,7 +41,7 @@
       <input type="checkbox" id="highScoreToggle" checked>
       Show best score
     </label>
-    <button id="closeSettings">Close</button>
+    <button id="closeSettings" type="button">Close</button>
   </div>
 
   <script src="game.js"></script>
