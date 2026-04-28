@@ -10,7 +10,7 @@ const bonusWrap = document.getElementById("bonusWrap");
 const startPanel = document.getElementById("startPanel");
 const startBtn = document.getElementById("startBtn");
 const runSummary = document.getElementById("runSummary");
-const modeButtons = Array.from(document.querySelectorAll("[data-mode]"));
+const modeInputs = Array.from(document.querySelectorAll("[name='gameMode']"));
 const settingsBtn = document.getElementById("settingsBtn");
 const settingsModal = document.getElementById("settingsModal");
 const vibrateToggle = document.getElementById("vibrateToggle");
@@ -105,11 +105,8 @@ function applySettings() {
 }
 
 function applyMode() {
-  modeButtons.forEach((button) => {
-    button.setAttribute(
-      "aria-pressed",
-      String(button.dataset.mode === currentMode)
-    );
+  modeInputs.forEach((input) => {
+    input.checked = input.value === currentMode;
   });
 
   if (!playing) {
@@ -540,9 +537,11 @@ settingKeys.forEach((key, toggle) => {
   });
 });
 
-modeButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    currentMode = modes[button.dataset.mode] ? button.dataset.mode : "classic";
+modeInputs.forEach((input) => {
+  input.addEventListener("change", () => {
+    if (!input.checked) return;
+
+    currentMode = modes[input.value] ? input.value : "classic";
     writeStorage(MODE_KEY, currentMode);
     applyMode();
   });

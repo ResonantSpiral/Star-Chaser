@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Star-Chaser</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=20260428-mode-toggle" />
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
@@ -25,10 +25,13 @@
   <section id="startPanel" class="panel" aria-live="polite">
     <h2>Star-Chaser</h2>
     <p id="runSummary">Classic: 45-second run</p>
-    <div class="mode-controls" role="group" aria-label="Game mode">
-      <button type="button" data-mode="classic" aria-pressed="true">Classic</button>
-      <button type="button" data-mode="extended" aria-pressed="false">Extended</button>
-    </div>
+    <fieldset class="mode-controls" aria-label="Game mode">
+      <legend>Game mode</legend>
+      <input type="radio" name="gameMode" id="modeClassic" value="classic" checked>
+      <label for="modeClassic">Classic</label>
+      <input type="radio" name="gameMode" id="modeExtended" value="extended">
+      <label for="modeExtended">Extended</label>
+    </fieldset>
     <button id="startBtn" type="button">Start Run</button>
   </section>
 
@@ -49,6 +52,6 @@
     <button id="closeSettings" type="button">Close</button>
   </div>
 
-  <script src="game.js"></script>
+  <script src="game.js?v=20260428-mode-toggle"></script>
 </body>
 </html>
